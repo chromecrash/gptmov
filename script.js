@@ -1,4 +1,4 @@
-const apiKey = 'myapikey'; // Replace with your actual API key
+const apiKey = 'afcd4c24'; // Replace with your actual API key
 
 async function fetchMovieSuggestions(query) {
   const url = `http://www.omdbapi.com/?s=${encodeURIComponent(query)}&apikey=${apiKey}`;
