@@ -4,7 +4,135 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Movie/Show Search and Embed</title>
-  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #3c3c3c;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .search-container {
+      text-align: center;
+      margin-top: 50px;
+      position: relative;
+    }
+
+    input[type="text"], input[type="number"], select {
+      width: 300px;
+      padding: 10px;
+      margin-right: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 10px 15px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background-color: white;
+      color: black;
+      border: 1px solid #ccc;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+
+    .suggestion-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .suggestion-item img {
+      height: 50px;
+      margin-right: 10px;
+    }
+
+    .suggestion-item span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 250px;
+    }
+
+    .suggestion-item:hover {
+      background-color: #f0f0f0;
+    }
+
+    #results {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+
+    #embed-container {
+      margin-top: 20px;
+    }
+
+    #tv-show-options {
+      display: none; /* Hidden by default */
+    }
+
+    /* Adblocker Warning Styles */
+    #adblock-warning {
+      background-color: #ffcc00;
+      color: black;
+      padding: 20px;
+      width: 80%;
+      max-width: 600px;
+      text-align: center;
+      border-radius: 10px;
+      position: relative;
+      margin-top: 20px;
+    }
+
+    #adblock-warning strong {
+      font-size: 24px;
+      color: red;
+    }
+
+    #adblock-warning a {
+      color: blue;
+      text-decoration: underline;
+    }
+
+    #adblock-warning button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background-color: red;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #adblock-warning button:hover {
+      background-color: darkred;
+    }
+
+  </style>
 </head>
 <body>
 
@@ -19,11 +147,13 @@
   <div class="search-container">
     <h1>Movie/Show Search</h1>
 
+    <!-- Dropdown to choose between Movie and TV Show -->
     <select id="media-type">
       <option value="movie">Movie</option>
       <option value="tv-show">TV Show</option>
     </select>
 
+    <!-- Embed source dropdown -->
     <select id="embed-source">
       <option value="embed.su">Embed.su</option>
       <option value="superembed.stream">SuperEmbed</option>
@@ -35,6 +165,7 @@
 
     <input type="text" id="search-input" placeholder="Search for a movie or show...">
     
+    <!-- For TV shows: Add season and episode number fields -->
     <div id="tv-show-details" style="display:none;">
       <input type="number" id="season-number" placeholder="Season Number">
       <input type="number" id="episode-number" placeholder="Episode Number">
@@ -46,12 +177,184 @@
       </div>
     </div>
 
-    <div id="suggestions"></div>
+    <div id="suggestions"></div> <!-- Suggestions container -->
   </div>
 
   <div id="results"></div>
+
+  <!-- Container for embedding the movie/show -->
   <div id="embed-container"></div>
 
-  <script src="script.js"></script>
+  <script>
+    // Define your OMDb API key here
+    const apiKey = 'afcd4c24'; // Replace with your actual API key
+
+    // Function to fetch data from OMDb API as the user types
+    async function fetchMovieSuggestions(query) {
+      const url = `http://www.omdbapi.com/?s=${encodeURIComponent(query)}&apikey=${apiKey}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      // Display results if successful
+      if (data.Response === 'True') {
+        displaySuggestions(data.Search);
+      } else {
+        clearSuggestions(); // Clear suggestions if no match
+      }
+    }
+
+    // Function to display suggestions as dropdown
+    function displaySuggestions(movies) {
+      const suggestionsDiv = document.getElementById('suggestions');
+      suggestionsDiv.innerHTML = ''; // Clear previous suggestions
+      
+      movies.forEach(movie => {
+        const suggestionItem = document.createElement('div');
+        suggestionItem.classList.add('suggestion-item');
+        
+        // Show movie title and year along with poster
+        suggestionItem.innerHTML = `
+          <img src="${movie.Poster}" alt="${movie.Title} Poster">
+          <span>
+            <strong>${movie.Title}</strong> (${movie.Year})
+          </span>
+        `;
+        
+        // When a suggestion is clicked, embed the movie or TV show
+        suggestionItem.addEventListener('click', () => {
+          const mediaType = document.getElementById('media-type').value;
+          if (mediaType === 'movie') {
+            embedMovie(movie.imdbID, movie.Title, movie.Year);
+          } else if (mediaType === 'tv-show') {
+            embedTVShow(movie.imdbID, movie.Title, movie.Year);
+          }
+          clearSuggestions(); // Clear suggestions after selection
+        });
+
+        suggestionsDiv.appendChild(suggestionItem);
+      });
+    }
+
+    // Function to embed the movie into the page using an iframe
+    function embedMovie(imdbID, title, year) {
+      const resultsDiv = document.getElementById('results');
+      const embedDiv = document.getElementById('embed-container');
+      const selectedSource = document.getElementById('embed-source').value;
+
+      // Show the selected movie details
+      resultsDiv.innerHTML = `<strong>${title}</strong> (${year}) - IMDb ID: <strong>${imdbID}</strong>`;
+
+      // Determine the embed link for movies
+      let embedLink;
+      if (selectedSource === 'embed.su') {
+        embedLink = `https://embed.su/embed/movie/${imdbID}`;
+      } else if (selectedSource === 'superembed.stream') {
+        embedLink = `https://multiembed.mov/?video_id=${imdbID}`;
+      } else if (selectedSource === '2embed.cc') {
+        embedLink = `https://www.2embed.cc/embed/${imdbID}`;
+      } else if (selectedSource === 'vidlink.pro') {
+        embedLink = `https://vidlink.pro/movie/${imdbID}`;
+      } else if (selectedSource === 'vidsrc.me') {
+        embedLink = `https://vidsrc.xyz/embed/movie/${imdbID}`;
+      } else if (selectedSource === 'smashy.stream') {
+        embedLink = `https://player.smashy.stream/movie/${imdbID}`;
+      }
+
+      // Embed the movie
+      embedDiv.innerHTML = `
+        <iframe width="800" height="450" src="${embedLink}" frameborder="0" allowfullscreen></iframe>
+      `;
+    }
+
+    // Function to embed TV shows using IMDb ID
+    function embedTVShow(imdbID, title, year) {
+      const resultsDiv = document.getElementById('results');
+      const embedDiv = document.getElementById('embed-container');
+      const seasonNumber = document.getElementById('season-number').value;
+      const episodeNumber = document.getElementById('episode-number').value;
+      const selectedSource = document.getElementById('embed-source').value;
+      const selectedEpisodeOption = document.getElementById('episode-option')?.value;
+
+      // Show the selected TV show details
+      resultsDiv.innerHTML = `<strong>${title}</strong> (${year}) - IMDb ID: <strong>${imdbID}</strong>`;
+
+      // Determine the embed link for TV shows
+      let embedLink;
+      if (selectedSource === 'vidsrc.me') {
+        embedLink = `https://vidsrc.xyz/embed/tv?imdb=${imdbID}&s=${seasonNumber}&e=${episodeNumber}`;
+      } else if (selectedSource === 'smashy.stream') {
+        embedLink = `https://player.smashy.stream/tv/${imdbID}?s=${seasonNumber}&e=${episodeNumber}`;
+      } else if (selectedSource === '2embed.cc') {
+        if (selectedEpisodeOption === 'individual') {
+          embedLink = `https://www.2embed.cc/embedtv/${imdbID}&s=${seasonNumber}&e=${episodeNumber}`;
+        } else if (selectedEpisodeOption === 'full-season') {
+          embedLink = `https://www.2embed.cc/embedtvfull/${imdbID}`;
+        }
+      }
+
+      // Embed the TV show
+      embedDiv.innerHTML = `
+        <iframe width="800" height="450" src="${embedLink}" frameborder="0" allowfullscreen></iframe>
+      `;
+    }
+
+    // Clear suggestions when no match is found or after selection
+    function clearSuggestions() {
+      document.getElementById('suggestions').innerHTML = '';
+    }
+
+    // Event listener for typing in the search input field
+    document.getElementById('search-input').addEventListener('keyup', () => {
+      const query = document.getElementById('search-input').value;
+      if (query.trim()) {
+        fetchMovieSuggestions(query);
+      } else {
+        clearSuggestions();
+      }
+    });
+
+    // Show or hide season/episode inputs based on selection
+    document.getElementById('media-type').addEventListener('change', (event) => {
+      const selectedType = event.target.value;
+      const tvShowDetails = document.getElementById('tv-show-details');
+      if (selectedType === 'tv-show') {
+        tvShowDetails.style.display = 'block';
+
+        // Hide incompatible embed sources
+        const embedSource = document.getElementById('embed-source');
+        for (let i = 0; i < embedSource.options.length; i++) {
+          if (embedSource.options[i].value !== 'vidsrc.me' && embedSource.options[i].value !== 'smashy.stream' && embedSource.options[i].value !== '2embed.cc') {
+            embedSource.options[i].style.display = 'none'; // Hide options that don't support TV shows
+          } else {
+            embedSource.options[i].style.display = 'block'; // Show valid options
+          }
+        }
+      } else {
+        tvShowDetails.style.display = 'none';
+
+        // Show all embed sources
+        const embedSource = document.getElementById('embed-source');
+        for (let i = 0; i < embedSource.options.length; i++) {
+          embedSource.options[i].style.display = 'block'; // Show all options
+        }
+      }
+    });
+
+    // Show or hide season/episode options based on the embed source selected
+    document.getElementById('embed-source').addEventListener('change', (event) => {
+      const selectedSource = event.target.value;
+      const tvShowOptions = document.getElementById('tv-show-options');
+      if (selectedSource === '2embed.cc') {
+        tvShowOptions.style.display = 'block';
+      } else {
+        tvShowOptions.style.display = 'none';
+      }
+    });
+
+    // Function to dismiss the adblocker warning
+    function dismissWarning() {
+      document.getElementById('adblock-warning').style.display = 'none';
+    }
+  </script>
 </body>
 </html>
