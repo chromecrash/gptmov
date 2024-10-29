@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Movie/Show Search and Embed</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Adblocker Warning Section -->
+  <div id="adblock-warning">
+    <strong>⛔ Use an Adblocker! ⛔</strong>
+    <p>Please ensure you have an adblocker enabled to avoid redirection and unwanted ads. Consider using a trusted adblocker like <a href="https://ublockorigin.com" target="_blank">uBlock Origin</a>.</p>
+    <p>Enjoy! 😃</p>
+    <button onclick="dismissWarning()">Dismiss</button>
+  </div>
+
+  <div class="search-container">
+    <h1>Movie/Show Search</h1>
+
+    <select id="media-type">
+      <option value="movie">Movie</option>
+      <option value="tv-show">TV Show</option>
+    </select>
+
+    <select id="embed-source">
+      <option value="embed.su">Embed.su</option>
+      <option value="superembed.stream">SuperEmbed</option>
+      <option value="2embed.cc">2Embed</option>
+      <option value="vidlink.pro">VidLink.pro</option>
+      <option value="vidsrc.me">VidSrc.me</option>
+      <option value="smashy.stream">Smashy.stream</option>
+    </select>
+
+    <input type="text" id="search-input" placeholder="Search for a movie or show...">
+    
+    <div id="tv-show-details" style="display:none;">
+      <input type="number" id="season-number" placeholder="Season Number">
+      <input type="number" id="episode-number" placeholder="Episode Number">
+      <div id="tv-show-options" style="display:none;">
+        <select id="episode-option">
+          <option value="individual">Embed Individual Episode</option>
+          <option value="full-season">Embed Complete Season</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="suggestions"></div>
+  </div>
+
+  <div id="results"></div>
+  <div id="embed-container"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
