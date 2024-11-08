@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Movie/Show Search and Embed</title>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -356,6 +357,76 @@ async function fetchMovieSuggestions(query) {
     function dismissWarning() {
       document.getElementById('adblock-warning').style.display = 'none';
     }
+// Variables to store selected movie/show details
+let currentMedia = { imdbID: '', title: '', year: '', type: '' };
+
+// Embed a movie and store details
+function embedMovie(imdbID, title, year) {
+  currentMedia = { imdbID, title, year, type: 'movie' };
+  updateEmbed();
+}
+
+// Embed a TV show and store details
+function embedTVShow(imdbID, title, year) {
+  currentMedia = { imdbID, title, year, type: 'tv-show' };
+  updateEmbed();
+}
+
+// Function to update the embed based on the selected server
+function updateEmbed() {
+  const { imdbID, title, year, type } = currentMedia;
+  if (!imdbID) return; // Prevent update if no movie/show is selected
+
+  const embedDiv = document.getElementById('embed-container');
+  const selectedSource = document.getElementById('embed-source').value;
+
+  // Display the selected movie/show details
+  const resultsDiv = document.getElementById('results');
+  resultsDiv.innerHTML = `<strong>${title}</strong> (${year}) - IMDb ID: <strong>${imdbID}</strong>`;
+
+  // Generate the correct embed link based on the type and source
+  let embedLink = '';
+  if (type === 'movie') {
+    if (selectedSource === 'embed.su') {
+      embedLink = `https://embed.su/embed/movie/${imdbID}`;
+    } else if (selectedSource === 'superembed.stream') {
+      embedLink = `https://multiembed.mov/?video_id=${imdbID}`;
+    } else if (selectedSource === '2embed.cc') {
+      embedLink = `https://www.2embed.cc/embed/${imdbID}`;
+    } else if (selectedSource === 'vidlink.pro') {
+      embedLink = `https://vidlink.pro/movie/${imdbID}`;
+    } else if (selectedSource === 'vidsrc.me') {
+      embedLink = `https://vidsrc.xyz/embed/movie/${imdbID}`;
+    } else if (selectedSource === 'smashy.stream') {
+      embedLink = `https://player.smashy.stream/movie/${imdbID}`;
+    }
+  } else if (type === 'tv-show') {
+    const seasonNumber = document.getElementById('season-number').value;
+    const episodeNumber = document.getElementById('episode-number').value;
+
+    if (selectedSource === 'vidsrc.me') {
+      embedLink = `https://vidsrc.xyz/embed/tv?imdb=${imdbID}&s=${seasonNumber}&e=${episodeNumber}`;
+    } else if (selectedSource === 'smashy.stream') {
+      embedLink = `https://player.smashy.stream/tv/${imdbID}?s=${seasonNumber}&e=${episodeNumber}`;
+    } else if (selectedSource === '2embed.cc') {
+      const selectedEpisodeOption = document.getElementById('episode-option').value;
+      embedLink = selectedEpisodeOption === 'individual' 
+        ? `https://www.2embed.cc/embedtv/${imdbID}&s=${seasonNumber}&e=${episodeNumber}` 
+        : `https://www.2embed.cc/embedtvfull/${imdbID}`;
+    }
+  }
+
+  // Embed the iframe with the generated link
+  embedDiv.innerHTML = `
+    <iframe width="800" height="450" src="${embedLink}" frameborder="0" allowfullscreen></iframe>
+  `;
+}
+
+// Automatically refresh player when server changes
+document.getElementById('embed-source').addEventListener('change', updateEmbed);
+
+
+
   </script>
 </body>
 </html>
