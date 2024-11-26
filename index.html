@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -404,7 +405,9 @@ function updateEmbed() {
     const seasonNumber = document.getElementById('season-number').value;
     const episodeNumber = document.getElementById('episode-number').value;
 
-    if (selectedSource === 'vidsrc.me') {
+    if (selectedSource === 'embed.su') {
+      embedLink = `https://embed.su/embed/tv/${imdbID}/${seasonNumber}/${episodeNumber}`;
+    } else if (selectedSource === 'vidsrc.me') {
       embedLink = `https://vidsrc.xyz/embed/tv?imdb=${imdbID}&s=${seasonNumber}&e=${episodeNumber}`;
     } else if (selectedSource === 'smashy.stream') {
       embedLink = `https://player.smashy.stream/tv/${imdbID}?s=${seasonNumber}&e=${episodeNumber}`;
@@ -422,8 +425,39 @@ function updateEmbed() {
   `;
 }
 
+
 // Automatically refresh player when server changes
 document.getElementById('embed-source').addEventListener('change', updateEmbed);
+
+document.getElementById('media-type').addEventListener('change', (event) => {
+  const selectedType = event.target.value;
+  const tvShowDetails = document.getElementById('tv-show-details');
+  if (selectedType === 'tv-show') {
+    tvShowDetails.style.display = 'block';
+
+    // Hide incompatible embed sources
+    const embedSource = document.getElementById('embed-source');
+    for (let i = 0; i < embedSource.options.length; i++) {
+      if (embedSource.options[i].value === 'embed.su' || 
+          embedSource.options[i].value === 'vidsrc.me' || 
+          embedSource.options[i].value === 'smashy.stream' || 
+          embedSource.options[i].value === '2embed.cc') {
+        embedSource.options[i].style.display = 'block';
+      } else {
+        embedSource.options[i].style.display = 'none';
+      }
+    }
+  } else {
+    tvShowDetails.style.display = 'none';
+
+    // Show all embed sources
+    const embedSource = document.getElementById('embed-source');
+    for (let i = 0; i < embedSource.options.length; i++) {
+      embedSource.options[i].style.display = 'block';
+    }
+  }
+});
+
 
 
 
