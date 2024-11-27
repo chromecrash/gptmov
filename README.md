@@ -57,6 +57,7 @@ The main file, `index.html`, includes:
   - Smashy.stream
 
 - TV Shows Only:
+  - Embed.su
   - VidSrc.me
   - Smashy.stream
   - 2Embed.cc (supports individual episodes or full seasons)
