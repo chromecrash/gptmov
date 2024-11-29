@@ -155,15 +155,17 @@
       <option value="tv-show">TV Show</option>
     </select>
 
-    <!-- Embed source dropdown -->
-    <select id="embed-source">
-      <option value="embed.su">Embed.su</option>
-      <option value="superembed.stream">SuperEmbed</option>
-      <option value="2embed.cc">2Embed</option>
-      <option value="vidlink.pro">VidLink.pro</option>
-      <option value="vidsrc.me">VidSrc.me</option>
-      <option value="smashy.stream">Smashy.stream</option>
-    </select>
+<!-- Embed source dropdown -->
+<select id="embed-source">
+  <option value="embed.su">Embed.su</option>
+  <option value="superembed.stream">SuperEmbed</option>
+  <option value="2embed.cc">2Embed</option>
+  <option value="vidlink.pro">VidLink.pro</option>
+  <option value="vidsrc.me">VidSrc.me</option>
+  <option value="smashy.stream">Smashy.stream</option>
+  <option value="vidsrc.vip">VidSrc.vip</option> <!-- New source added -->
+</select>
+
 
     <input type="text" id="search-input" placeholder="Search for a movie or show...">
     
@@ -238,68 +240,74 @@ async function fetchMovieSuggestions(query) {
       });
     }
 
-    // Function to embed the movie into the page using an iframe
-    function embedMovie(imdbID, title, year) {
-      const resultsDiv = document.getElementById('results');
-      const embedDiv = document.getElementById('embed-container');
-      const selectedSource = document.getElementById('embed-source').value;
+// Function to embed the movie into the page using an iframe
+function embedMovie(imdbID, title, year) {
+  const resultsDiv = document.getElementById('results');
+  const embedDiv = document.getElementById('embed-container');
+  const selectedSource = document.getElementById('embed-source').value;
 
-      // Show the selected movie details
-      resultsDiv.innerHTML = `<strong>${title}</strong> (${year}) - IMDb ID: <strong>${imdbID}</strong>`;
+  // Show the selected movie details
+  resultsDiv.innerHTML = `<strong>${title}</strong> (${year}) - IMDb ID: <strong>${imdbID}</strong>`;
 
-      // Determine the embed link for movies
-      let embedLink;
-      if (selectedSource === 'embed.su') {
-        embedLink = `https://embed.su/embed/movie/${imdbID}`;
-      } else if (selectedSource === 'superembed.stream') {
-        embedLink = `https://multiembed.mov/?video_id=${imdbID}`;
-      } else if (selectedSource === '2embed.cc') {
-        embedLink = `https://www.2embed.cc/embed/${imdbID}`;
-      } else if (selectedSource === 'vidlink.pro') {
-        embedLink = `https://vidlink.pro/movie/${imdbID}`;
-      } else if (selectedSource === 'vidsrc.me') {
-        embedLink = `https://vidsrc.xyz/embed/movie/${imdbID}`;
-      } else if (selectedSource === 'smashy.stream') {
-        embedLink = `https://player.smashy.stream/movie/${imdbID}`;
-      }
+  // Determine the embed link for movies
+  let embedLink;
+  if (selectedSource === 'embed.su') {
+    embedLink = `https://embed.su/embed/movie/${imdbID}`;
+  } else if (selectedSource === 'superembed.stream') {
+    embedLink = `https://multiembed.mov/?video_id=${imdbID}`;
+  } else if (selectedSource === '2embed.cc') {
+    embedLink = `https://www.2embed.cc/embed/${imdbID}`;
+  } else if (selectedSource === 'vidlink.pro') {
+    embedLink = `https://vidlink.pro/movie/${imdbID}`;
+  } else if (selectedSource === 'vidsrc.me') {
+    embedLink = `https://vidsrc.xyz/embed/movie/${imdbID}`;
+  } else if (selectedSource === 'smashy.stream') {
+    embedLink = `https://player.smashy.stream/movie/${imdbID}`;
+  } else if (selectedSource === 'vidsrc.vip') {  // New embed source logic
+    embedLink = `https://vidsrc.vip/embed/movie/${imdbID}`;
+  }
 
-      // Embed the movie
-      embedDiv.innerHTML = `
-        <iframe width="800" height="450" src="${embedLink}" frameborder="0" allowfullscreen></iframe>
-      `;
+  // Embed the movie
+  embedDiv.innerHTML = `
+    <iframe width="800" height="450" src="${embedLink}" frameborder="0" allowfullscreen></iframe>
+  `;
+}
+
+
+// Function to embed TV shows using IMDb ID
+function embedTVShow(imdbID, title, year) {
+  const resultsDiv = document.getElementById('results');
+  const embedDiv = document.getElementById('embed-container');
+  const seasonNumber = document.getElementById('season-number').value;
+  const episodeNumber = document.getElementById('episode-number').value;
+  const selectedSource = document.getElementById('embed-source').value;
+  const selectedEpisodeOption = document.getElementById('episode-option')?.value;
+
+  // Show the selected TV show details
+  resultsDiv.innerHTML = `<strong>${title}</strong> (${year}) - IMDb ID: <strong>${imdbID}</strong>`;
+
+  // Determine the embed link for TV shows
+  let embedLink;
+  if (selectedSource === 'vidsrc.vip') {  // New embed source logic for TV shows
+    embedLink = `https://vidsrc.vip/embed/tv/${imdbID}/${seasonNumber}/${episodeNumber}`;
+  } else if (selectedSource === 'vidsrc.me') {
+    embedLink = `https://vidsrc.xyz/embed/tv?imdb=${imdbID}&s=${seasonNumber}&e=${episodeNumber}`;
+  } else if (selectedSource === 'smashy.stream') {
+    embedLink = `https://player.smashy.stream/tv/${imdbID}?s=${seasonNumber}&e=${episodeNumber}`;
+  } else if (selectedSource === '2embed.cc') {
+    if (selectedEpisodeOption === 'individual') {
+      embedLink = `https://www.2embed.cc/embedtv/${imdbID}&s=${seasonNumber}&e=${episodeNumber}`;
+    } else if (selectedEpisodeOption === 'full-season') {
+      embedLink = `https://www.2embed.cc/embedtvfull/${imdbID}`;
     }
+  }
 
-    // Function to embed TV shows using IMDb ID
-    function embedTVShow(imdbID, title, year) {
-      const resultsDiv = document.getElementById('results');
-      const embedDiv = document.getElementById('embed-container');
-      const seasonNumber = document.getElementById('season-number').value;
-      const episodeNumber = document.getElementById('episode-number').value;
-      const selectedSource = document.getElementById('embed-source').value;
-      const selectedEpisodeOption = document.getElementById('episode-option')?.value;
+  // Embed the TV show
+  embedDiv.innerHTML = `
+    <iframe width="800" height="450" src="${embedLink}" frameborder="0" allowfullscreen></iframe>
+  `;
+}
 
-      // Show the selected TV show details
-      resultsDiv.innerHTML = `<strong>${title}</strong> (${year}) - IMDb ID: <strong>${imdbID}</strong>`;
-
-      // Determine the embed link for TV shows
-      let embedLink;
-      if (selectedSource === 'vidsrc.me') {
-        embedLink = `https://vidsrc.xyz/embed/tv?imdb=${imdbID}&s=${seasonNumber}&e=${episodeNumber}`;
-      } else if (selectedSource === 'smashy.stream') {
-        embedLink = `https://player.smashy.stream/tv/${imdbID}?s=${seasonNumber}&e=${episodeNumber}`;
-      } else if (selectedSource === '2embed.cc') {
-        if (selectedEpisodeOption === 'individual') {
-          embedLink = `https://www.2embed.cc/embedtv/${imdbID}&s=${seasonNumber}&e=${episodeNumber}`;
-        } else if (selectedEpisodeOption === 'full-season') {
-          embedLink = `https://www.2embed.cc/embedtvfull/${imdbID}`;
-        }
-      }
-
-      // Embed the TV show
-      embedDiv.innerHTML = `
-        <iframe width="800" height="450" src="${embedLink}" frameborder="0" allowfullscreen></iframe>
-      `;
-    }
 
     // Clear suggestions when no match is found or after selection
     function clearSuggestions() {
